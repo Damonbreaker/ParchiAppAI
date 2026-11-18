@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Parchi OCR</title>
+  <style>
+    :root {
+      --ink: #0b3b32;
+      --lime: #c9ef57;
+      --cream: #f7f2e8;
+      --coral: #ff7048;
+      --line: #d8d2c8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: linear-gradient(180deg, #eef5e6 0%, var(--cream) 40%, #fff 100%);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    main { max-width: 980px; margin: 0 auto; padding: 28px 16px 64px; }
+    h1 { font-size: 1.7rem; margin: 0 0 6px; letter-spacing: -0.02em; }
+    .sub { color: #35574f; margin: 0 0 22px; line-height: 1.45; }
+    .card {
+      background: #fff; border: 1px solid var(--line);
+      border-radius: 14px; padding: 18px; margin-bottom: 16px;
+    }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    button, label.btn {
+      appearance: none; border: 0; border-radius: 10px;
+      padding: 11px 16px; font-weight: 650; cursor: pointer;
+      background: var(--ink); color: #fff;
+    }
+    button.secondary { background: #fff; color: var(--ink); border: 1px solid var(--ink); }
+    button.lime { background: var(--lime); color: var(--ink); }
+    button.coral { background: var(--coral); color: #fff; }
+    button:disabled { opacity: 0.5; cursor: wait; }
+    input[type="file"] { display: none; }
+    select.mode {
+      border: 1px solid var(--line); border-radius: 10px;
+      padding: 10px 12px; background: #fff; color: var(--ink);
+    }
+    #status { min-height: 1.4em; margin-top: 12px; color: #35574f; font-size: 0.95rem; }
+    #timing {
+      display: none; margin-top: 8px; font-size: 0.85rem;
+      color: #4d6b63; font-variant-numeric: tabular-nums;
+    }
+    .bar {
+      height: 6px; background: #e8efe3; border-radius: 99px;
+      overflow: hidden; margin-top: 10px; display: none;
+    }
+    .bar > i {
+      display: block; height: 100%; width: 30%;
+      background: linear-gradient(90deg, var(--lime), #7bc96f);
+      animation: slide 1s ease-in-out infinite;
+    }
+    @keyframes slide {
+      0% { transform: translateX(-120%); }
+      100% { transform: translateX(400%); }
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid var(--line); padding: 8px 6px; vertical-align: top; }
+    th {
+      text-align: left; font-size: 0.78rem; text-transform: uppercase;
+      letter-spacing: 0.04em; color: #4d6b63;
+    }
+    .edit-wrap {
+      display: flex; align-items: center; gap: 6px;
+      background: #fbfaf7; border: 1px solid var(--line); border-radius: 8px;
+      padding: 2px 8px 2px 6px;
+    }
+    .edit-wrap:focus-within {
+      outline: 2px solid var(--lime); background: #fff;
+    }
+    .pencil {
+      flex: 0 0 auto; opacity: 0.7; font-size: 0.95rem; user-select: none;
+    }
+    td input {
+      width: 100%; border: 0; border-radius: 8px;
+      padding: 9px 4px; font-size: 1rem; background: transparent;
+    }
+    td input:focus { outline: none; background: transparent; }
+    td.num { font-variant-numeric: tabular-nums; white-space: nowrap; padding-top: 14px; color: #35574f; font-size: 0.92rem; }
+    td.actions { width: 52px; }
+    td.actions button {
+      padding: 8px 10px; background: #fff; color: var(--coral); border: 1px solid #f0b8a8;
+    }
+    .hint { font-size: 0.88rem; color: #5a736c; margin-top: 8px; }
+    .bill {
+      display: flex; justify-content: space-between; align-items: baseline;
+      gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line);
+    }
+    .bill strong { font-size: 1.25rem; }
+    #preview {
+      max-width: 100%; max-height: 220px; border-radius: 10px;
+      border: 1px solid var(--line); display: none; margin-top: 12px;
+    }
+    .hidden { display: none !important; }
+    .muted { color: #6a837b; font-size: 0.8rem; }
+    .catalogue-cell { min-width: 155px; }
+    .catalogue-cell button {
+      margin-top: 5px; padding: 5px 8px; font-size: 0.76rem;
+      background: #fff; color: var(--ink); border: 1px solid var(--line);
+    }
+    .price-kind {
+      display: inline-block; margin-top: 3px; padding: 2px 6px;
+      border-radius: 99px; background: #eef5e6; color: #35574f; font-size: 0.7rem;
+    }
+    .catalogue-row td { padding: 0 6px 12px; background: #fbfaf7; }
+    .poll-panel {
+      border: 1px solid #dce8c5; border-radius: 10px; padding: 12px;
+      box-shadow: inset 4px 0 0 var(--lime);
+    }
+    .poll-head {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 10px; margin-bottom: 9px;
+    }
+    .poll-grid {
+      display: grid; grid-template-columns: repeat(4, minmax(130px, 1fr)); gap: 9px;
+    }
+    .poll-grid label { color: #4d6b63; font-size: 0.72rem; font-weight: 650; }
+    .poll-grid select {
+      display: block; width: 100%; margin-top: 3px; padding: 8px;
+      border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink);
+    }
+    .unit-fix { color: #9a3d22; font-size: 0.78rem; margin-top: 8px; }
+    .no-match { color: #6a837b; font-size: 0.82rem; }
+    @media (max-width: 760px) {
+      .poll-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+      table { min-width: 720px; }
+      #tableCard { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Parchi OCR</h1>
+    <p class="sub">
+      Snap a list with gaps between <b>item</b>, <b>qty</b>, and <b>price</b>.
+      Tap any pencil field to rewrite it. The catalogue suggests real item, type, brand, pack,
+      unit, and labelled price choices; the first suggestion is used when you skip the choices.
+      Uses the legacy dual-OCR pipeline (layout + numeric).
+    </p>
+
+    <section class="card">
+      <div class="row">
+        <label class="btn">
+          Take / choose photo
+          <input id="file" type="file" accept="image/*" capture="environment" />
+        </label>
+        <input type="hidden" id="mode" value="legacy" />
+        <button id="read" class="lime" disabled>Read list</button>
+        <button id="add" class="secondary hidden" type="button">Add row</button>
+        <button id="save" class="coral hidden" type="button">Save edits</button>
+      </div>
+      <div class="bar" id="progress"><i></i></div>
+      <img id="preview" alt="Selected list photo" />
+      <div id="status">Choose a clear photo of the list.</div>
+      <div id="timing"></div>
+    </section>
+
+    <section id="tableCard" class="card hidden">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:32%">Item</th>
+            <th style="width:16%">Quantity</th>
+            <th style="width:14%">Price</th>
+            <th style="width:16%">Catalogue</th>
+            <th style="width:14%">Line</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="bill">
+        <span class="muted" id="disclaimer">Prices show their source meaning: MRP, selling, observed, or reference.</span>
+        <div>Est. bill: <strong id="billTotal">Rs 0</strong></div>
+      </div>
+      <p class="hint">Every field remains editable. A manual price wins; otherwise the selected SKU price is used.</p>
+    </section>
+  </main>
+
+  <script>
+    const fileInput = document.getElementById("file");
+    const readBtn = document.getElementById("read");
+    const addBtn = document.getElementById("add");
+    const saveBtn = document.getElementById("save");
+    const modeEl = document.getElementById("mode");
+    const statusEl = document.getElementById("status");
+    const timingEl = document.getElementById("timing");
+    const progress = document.getElementById("progress");
+    const preview = document.getElementById("preview");
+    const tableCard = document.getElementById("tableCard");
+    const tbody = document.getElementById("tbody");
+    const billTotal = document.getElementById("billTotal");
+    const disclaimer = document.getElementById("disclaimer");
+
+    let selectedFile = null;
+    let rows = [];
+    let estimateTimer = null;
+    const resolveTokens = new Map();
+
+    function setStatus(text) { statusEl.textContent = text; }
+
+    function money(v) {
+      if (v == null || v === "") return "-";
+      const n = Number(v);
+      if (!Number.isFinite(n)) return "-";
+      return "Rs " + (Number.isInteger(n) ? n : n.toFixed(2));
+    }
+
+    function catalogueLabel(row) {
+      const guide = row.catalogue_guidance || {};
+      const price = guide.price || null;
+      const sku = guide.selected_sku || null;
+      if (!guide.matched) {
+        return '<span class="muted">No forced match</span>';
+      }
+      const heading = guide.review_recommended
+        ? "Suggested - tap pencil to verify"
+        : ((sku && sku.brand) || "Catalogue match");
+      let html = `<span>${escapeHtml(heading)}</span>`;
+      if (sku && sku.pack) html += `<br><span class="muted">${escapeHtml(sku.pack)}</span>`;
+      if (price && price.amount != null) {
+        html += `<br>${money(price.amount)} <span class="price-kind">${escapeHtml(price.price_label || price.price_type || "Price")}</span>`;
+      } else {
+        html += '<br><span class="muted">Price unavailable</span>';
+      }
+      if (guide.ai && guide.ai.used) {
+        html += '<br><span class="price-kind">AI ranked</span>';
+      }
+      return html;
+    }
+
+    function escapeHtml(value) {
+      return String(value == null ? "" : value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function optionHtml(value, selected, label) {
+      const isSelected = String(value) === String(selected);
+      return `<option value="${escapeAttr(value)}"${isSelected ? " selected" : ""}>${escapeHtml(label == null ? value : label)}</option>`;
+    }
+
+    function poll(label, key, values, selected, index, placeholder) {
+      const clean = Array.from(new Set((values || []).filter((v) => v != null && String(v).trim())));
+      if (selected && !clean.includes(selected)) clean.unshift(selected);
+      let opts = optionHtml("", selected, placeholder || "Any / suggested");
+      opts += clean.map((value) => optionHtml(value, selected)).join("");
+      return `<label>${escapeHtml(label)}<select data-poll="${key}" data-i="${index}">${opts}</select></label>`;
+    }
+
+    function packPoll(guide, index) {
+      const selection = guide.selection || {};
+      const packs = (guide.options && guide.options.packs) || [];
+      let opts = optionHtml("", selection.catalogue_id || "", "Suggested pack");
+      opts += packs.map((pack) => {
+        const bits = [pack.brand, pack.product, pack.label].filter(Boolean);
+        return optionHtml(pack.catalogue_id, selection.catalogue_id || "", bits.join(" - "));
+      }).join("");
+      return `<label>Variant / pack<select data-poll="catalogue_id" data-i="${index}">${opts}</select></label>`;
+    }
+
+    function cataloguePolls(row, index) {
+      const guide = row.catalogue_guidance || {};
+      if (!guide.matched) {
+        return `<div class="poll-panel"><div class="poll-head"><b>Catalogue choices</b><button class="secondary" type="button" data-close="${index}">Keep manual text</button></div><div class="no-match">No safe catalogue match was forced. Edit the item and quantity, then choices will be searched again.</div></div>`;
+      }
+      const options = guide.options || {};
+      const selection = guide.selection || {};
+      const qty = guide.quantity || {};
+      const correction = qty.unit_was_corrected
+        ? `<div class="unit-fix">Unit corrected from <b>${escapeHtml(qty.ocr_unit || "?")}</b> to <b>${escapeHtml(qty.recommended_unit || "?")}</b> using the selected catalogue pack. The number ${escapeHtml(qty.ocr_number || "")} was retained.</div>`
+        : "";
+      return `
+        <div class="poll-panel">
+          <div class="poll-head">
+            <b>Choose details, or use the first suggestion</b>
+            <button class="lime" type="button" data-close="${index}">Use current choice</button>
+          </div>
+          <div class="poll-grid">
+            ${poll("Department", "department", options.departments, selection.department, index)}
+            ${poll("Category", "category", options.categories, selection.category, index)}
+            ${poll("Type", "type", options.types, selection.type, index)}
+            ${poll("Brand", "brand", options.brands, selection.brand, index)}
+            ${poll("Item / variant", "product", options.products, selection.product, index)}
+            ${packPoll(guide, index)}
+            ${poll("Quantity unit", "unit", options.units, selection.unit, index, "Keep OCR unit")}
+          </div>
+          ${correction}
+        </div>`;
+    }
+
+    function render() {
+      tbody.innerHTML = "";
+      rows.forEach((row, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><div class="edit-wrap"><span class="pencil" title="Edit item">&#9998;</span><input data-k="item" data-i="${index}" value="${escapeAttr(row.item || "")}" placeholder="Item name" /></div></td>
+          <td><div class="edit-wrap"><span class="pencil" title="Edit quantity">&#9998;</span><input data-k="quantity" data-i="${index}" value="${escapeAttr(row.quantity || "")}" placeholder="Qty" /></div></td>
+          <td><div class="edit-wrap"><span class="pencil" title="Edit price">&#9998;</span><input data-k="price" data-i="${index}" value="${escapeAttr(row.price || "")}" placeholder="Price" /></div></td>
+          <td class="num catalogue-cell">${catalogueLabel(row)}<br><button type="button" data-toggle="${index}">&#9998; choices</button></td>
+          <td class="num">${money(row.line_total)}</td>
+          <td class="actions"><button type="button" data-del="${index}" title="Remove">x</button></td>
+        `;
+        tbody.appendChild(tr);
+        const detail = document.createElement("tr");
+        detail.className = "catalogue-row" + (row.catalogue_open === false ? " hidden" : "");
+        detail.innerHTML = `<td colspan="6">${cataloguePolls(row, index)}</td>`;
+        tbody.appendChild(detail);
+      });
+      const total = rows.reduce((s, r) => s + (Number(r.line_total) || 0), 0);
+      billTotal.textContent = money(total);
+      tableCard.classList.toggle("hidden", rows.length === 0);
+      addBtn.classList.toggle("hidden", rows.length === 0 && !selectedFile);
+      saveBtn.classList.toggle("hidden", rows.length === 0);
+    }
+
+    function escapeAttr(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("<", "&lt;");
+    }
+
+    async function reestimate() {
+      try {
+        const res = await fetch("/api/estimate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rows }),
+        });
+        const data = await res.json();
+        if (!res.ok) return;
+        rows = (data.rows || []).map((r, i) => ({
+          ...rows[i],
+          ...r,
+        }));
+        if (data.price_disclaimer) disclaimer.textContent = data.price_disclaimer;
+        render();
+      } catch (_) {}
+    }
+
+    function scheduleEstimate() {
+      clearTimeout(estimateTimer);
+      estimateTimer = setTimeout(reestimate, 350);
+    }
+
+    async function resolveRow(index) {
+      const row = rows[index];
+      if (!row) return;
+      const sequence = (resolveTokens.get(index) || 0) + 1;
+      resolveTokens.set(index, sequence);
+      try {
+        const res = await fetch("/api/catalogue/resolve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ row, selections: row.catalogue_selection || {} }),
+        });
+        const data = await res.json();
+        if (!res.ok || sequence !== resolveTokens.get(index) || !rows[index]) return;
+        const wasOpen = rows[index].catalogue_open;
+        rows[index] = { ...rows[index], ...data, catalogue_open: wasOpen };
+        render();
+        scheduleEstimate();
+      } catch (_) {}
+    }
+
+    tbody.addEventListener("input", (event) => {
+      const el = event.target;
+      if (!(el instanceof HTMLInputElement)) return;
+      const i = Number(el.dataset.i);
+      const k = el.dataset.k;
+      if (Number.isFinite(i) && k) {
+        rows[i][k] = el.value;
+        if (k === "item") {
+          rows[i].catalogue_selection = {};
+          rows[i].catalogue_guidance = null;
+          rows[i].catalogue_open = true;
+        } else if (k === "quantity") {
+          rows[i].catalogue_selection = { ...(rows[i].catalogue_selection || {}), catalogue_id: "" };
+        } else if (k === "price") {
+          rows[i].price_manual = true;
+        }
+        scheduleEstimate();
+      }
+    });
+
+    tbody.addEventListener("change", (event) => {
+      const el = event.target;
+      if (!(el instanceof HTMLSelectElement) || !el.dataset.poll) return;
+      const i = Number(el.dataset.i);
+      if (!Number.isFinite(i) || !rows[i]) return;
+      const key = el.dataset.poll;
+      const selections = { ...(rows[i].catalogue_selection || {}) };
+      selections[key] = el.value;
+      const cascade = {
+        department: ["category", "type", "brand", "product", "catalogue_id"],
+        category: ["type", "brand", "product", "catalogue_id"],
+        type: ["brand", "product", "catalogue_id"],
+        brand: ["product", "catalogue_id"],
+        product: ["catalogue_id"],
+      };
+      (cascade[key] || []).forEach((child) => { selections[child] = ""; });
+      rows[i].catalogue_selection = selections;
+      resolveRow(i);
+    });
+
+    tbody.addEventListener("click", (event) => {
+      const toggle = event.target.closest("button[data-toggle]");
+      if (toggle) {
+        const i = Number(toggle.dataset.toggle);
+        rows[i].catalogue_open = rows[i].catalogue_open === false;
+        render();
+        return;
+      }
+      const close = event.target.closest("button[data-close]");
+      if (close) {
+        const i = Number(close.dataset.close);
+        rows[i].catalogue_open = false;
+        render();
+        return;
+      }
+      const btn = event.target.closest("button[data-del]");
+      if (!btn) return;
+      rows.splice(Number(btn.dataset.del), 1);
+      render();
+      scheduleEstimate();
+    });
+
+    fileInput.addEventListener("change", () => {
+      selectedFile = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+      readBtn.disabled = !selectedFile;
+      timingEl.style.display = "none";
+      if (!selectedFile) {
+        preview.style.display = "none";
+        setStatus("Choose a clear photo of the list.");
+        return;
+      }
+      preview.src = URL.createObjectURL(selectedFile);
+      preview.style.display = "block";
+      setStatus("Photo ready. Tap Read list.");
+    });
+
+    readBtn.addEventListener("click", async () => {
+      if (!selectedFile) return;
+      readBtn.disabled = true;
+      progress.style.display = "block";
+      const mode = modeEl.value || "legacy";
+      setStatus("Reading list…");
+      timingEl.style.display = "none";
+      const body = new FormData();
+      body.append("file", selectedFile);
+      const t0 = performance.now();
+      try {
+        const res = await fetch("/api/ocr?mode=" + encodeURIComponent(mode), {
+          method: "POST",
+          body,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "OCR failed");
+        rows = (data.rows || []).map((r) => ({ ...r, catalogue_open: true }));
+        if (!rows.length) rows = [{ item: "", quantity: "", price: "" }];
+        if (data.price_disclaimer) disclaimer.textContent = data.price_disclaimer;
+        const wall = Math.round(performance.now() - t0);
+        const tm = data.timing_ms || {};
+        setStatus(data.message || "Done.");
+        timingEl.style.display = "block";
+        timingEl.textContent =
+          `Wall ${wall} ms - engine ${data.engine || mode}` +
+          (tm.total != null ? ` - server ${tm.total} ms` : "") +
+          (data.bill_estimate != null ? ` - bill Rs ${data.bill_estimate}` : "");
+        render();
+        await reestimate();
+      } catch (err) {
+        setStatus(err.message || String(err));
+      } finally {
+        progress.style.display = "none";
+        readBtn.disabled = !selectedFile;
+      }
+    });
+
+    addBtn.addEventListener("click", () => {
+      rows.push({ item: "", quantity: "", price: "", catalogue_open: true });
+      render();
+      scheduleEstimate();
+    });
+
+    saveBtn.addEventListener("click", async () => {
+      saveBtn.disabled = true;
+      try {
+        const res = await fetch("/api/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            rows,
+            bill_estimate: rows.reduce((s, r) => s + (Number(r.line_total) || 0), 0),
+            source: selectedFile ? selectedFile.name : null,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error("Save failed");
+        setStatus("Saved edits as " + data.file);
+      } catch (err) {
+        setStatus(err.message || String(err));
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

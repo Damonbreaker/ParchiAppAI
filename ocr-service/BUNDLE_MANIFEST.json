@@ -1,0 +1,144 @@
+{
+  "bundle": "National Retail OCR Bundle",
+  "version": "2026.11.12.0829",
+  "built_at_utc": "2026-11-12T08:29:39+00:00",
+  "catalogue_scope": "open_redistributable",
+  "runtime_models_bundled": false,
+  "files": [
+    {
+      "path": ".env.example",
+      "bytes": 670,
+      "sha256": "742bbb9bb7e71e55423b981c5e0268db22dbf914955112b8d2875792b4a6ae86"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2808,
+      "sha256": "8e76acf19e52f73e4eb93048ff0504e1c198d052b1f56265d40c74f23f21c6be"
+    },
+    {
+      "path": "THIRD_PARTY_DATA.md",
+      "bytes": 996,
+      "sha256": "06881e0e5f0f650b29f9ea7188639fa3289ecd2e69f616235fe1e992ab6480de"
+    },
+    {
+      "path": "app.py",
+      "bytes": 13812,
+      "sha256": "32d186f1fc09f922f7f9527ad7ad2988efa9a8e8495e04637f1868e3207932b1"
+    },
+    {
+      "path": "catalogue_ai.py",
+      "bytes": 5509,
+      "sha256": "6d44c7e72354dbb82c57ede20ae287628fd07eeb24933adc3a5ff935fdcd7959"
+    },
+    {
+      "path": "catalogue_output/open/national_retail_catalogue_open.sqlite",
+      "bytes": 15814656,
+      "sha256": "8a7dbc9a383e07e5156d5978f3f00577b8ad025d49f6f6545b38627c402b68e4"
+    },
+    {
+      "path": "catalogue_prices.py",
+      "bytes": 12012,
+      "sha256": "35fc448afc49e674a5bc818755886f8ca0385b3437b38803ac4c3780eb9c9ca7"
+    },
+    {
+      "path": "catalogue_runtime.py",
+      "bytes": 35755,
+      "sha256": "e1168b7acd291d14c4deebfb6b5575f08b8dd222b3f8d856557bd5411bc2ad79"
+    },
+    {
+      "path": "data/catalogue_prices.json",
+      "bytes": 4544,
+      "sha256": "d96a8fdc29c16e11d556f2a53f1ddfbea654b2ed79f249f060a8c0bd02f44c80"
+    },
+    {
+      "path": "grocery_correct.py",
+      "bytes": 17654,
+      "sha256": "648c1584b941b6bd5a186e8efd9bed0e13c96a0b71aa36b2517e31e029934254"
+    },
+    {
+      "path": "grocery_lexicon.json",
+      "bytes": 235372,
+      "sha256": "d90e9b375037ebd9506527dc1a924ef0266dd9811e044a0627e06af0a7c84914"
+    },
+    {
+      "path": "layout_ocr.py",
+      "bytes": 32771,
+      "sha256": "bc936f39fdd262f59db1bb789e8a7fdf60f0c8e75aaa50082a02bf9cd5113866"
+    },
+    {
+      "path": "main_flow.py",
+      "bytes": 3905,
+      "sha256": "81af1ebf274cee120b3c46c73b42b7584451919a24a41f4a8bfafd7ffcb68739"
+    },
+    {
+      "path": "numeric_ocr.py",
+      "bytes": 11424,
+      "sha256": "4ab11142c2aad59f96dbbb5d1f270ad13040b10332853a38d8a368210c22a118"
+    },
+    {
+      "path": "provenance/BUILD_REPORT.md",
+      "bytes": 1453,
+      "sha256": "8a4f837dac2e3d57d08a75c137c3c8a20550ccbe9efb238103528855842e4ddb"
+    },
+    {
+      "path": "provenance/build_report.json",
+      "bytes": 6564,
+      "sha256": "bae0e57181cb9a66da5e38d90530fe8afce32d7575fa3d6e0ef57f7ed67b8888"
+    },
+    {
+      "path": "provenance/source_manifest.json",
+      "bytes": 3844,
+      "sha256": "6e60d0511803fc118a69752b9c833f5cc9ca7e2aeb6d36a02ae5e6ff739cd0eb"
+    },
+    {
+      "path": "provenance/verification_report.json",
+      "bytes": 731,
+      "sha256": "ed68313a57cc9aeeeb7f24f68ec9d116f7ae3cda0b627628d074bf30e9179d2c"
+    },
+    {
+      "path": "realtime_ocr.py",
+      "bytes": 10884,
+      "sha256": "b76e6badfc1e36359ed2b224a5ca324074e88d851eece5428fcf076950b00429"
+    },
+    {
+      "path": "requirements.txt",
+      "bytes": 243,
+      "sha256": "28bf28c7ecec9308fe05060d8667613b693a914778b05f331b8b56fc76400d65"
+    },
+    {
+      "path": "run_api.sh",
+      "bytes": 657,
+      "sha256": "b71e7aad9fd922e988860c57a082a004d69564b901601e6372c7ef88eb772628"
+    },
+    {
+      "path": "run_share.sh",
+      "bytes": 578,
+      "sha256": "1ac314656ae2cd3b7bff1f61a09e91ac2ba081757f925a0ee5043c838e74d306"
+    },
+    {
+      "path": "share_app.py",
+      "bytes": 18632,
+      "sha256": "f4e5b75f6649d92896201966a1dabda801e7924434fa405f2ecbe6a329bd8c25"
+    },
+    {
+      "path": "static/index.html",
+      "bytes": 21633,
+      "sha256": "a3d30daa4fa48ae067af3277001e2d1496e2d4e2ac254e64d9f2e5d7e965dc93"
+    },
+    {
+      "path": "test_catalogue_runtime.py",
+      "bytes": 6026,
+      "sha256": "c81304edca7dc65c6aeff4e72ade0cef3e771a6d41c3d4754f6e07cdc9823661"
+    },
+    {
+      "path": "test_optional_columns.py",
+      "bytes": 7169,
+      "sha256": "4562adda0652c710161b43446edd5f98b47bea459c3939ac44993e363a7c8c65"
+    },
+    {
+      "path": "verify_bundle.py",
+      "bytes": 3352,
+      "sha256": "bd5e111b02a82c8badf55347e81936443a31527eaae1732789146ddd838fec56"
+    }
+  ]
+}

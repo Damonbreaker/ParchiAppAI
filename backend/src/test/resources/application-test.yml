@@ -1,0 +1,17 @@
+spring:
+  jpa:
+    properties:
+      hibernate:
+        generate_statistics: true   # QueryCountIntegrationTest counts SQL statements
+
+logging:
+  level:
+    org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: WARN  # no per-session stats spam
+
+app:
+  demo:
+    auto-quote: false             # tests assert empty quotes until the store puts one
+    reveal-pickup-code: false     # keep pickup code customer-only in tests
+  parchi:
+    reader: mock                  # never call the live OCR service from tests
+    mock-delay-ms: 0

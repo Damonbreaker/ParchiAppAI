@@ -1,0 +1,189 @@
+{
+  "built_at_utc": "2026-11-11T13:03:32+00:00",
+  "report": {
+    "outputs": {
+      "open": {
+        "workbook": "/media/user/New/Jatin/parchi-ocr/catalogue_output/National_Retail_Catalogue_Open.xlsx",
+        "sqlite": "/media/user/New/Jatin/parchi-ocr/catalogue_output/open/national_retail_catalogue_open.sqlite"
+      },
+      "internal": {
+        "workbook": "/media/user/New/Jatin/parchi-ocr/catalogue_output/National_Retail_Catalogue_Internal.xlsx",
+        "sqlite": "/media/user/New/Jatin/parchi-ocr/catalogue_output/internal/national_retail_catalogue_internal.sqlite"
+      }
+    },
+    "scopes": {
+      "open": {
+        "master": 22046,
+        "listings": 501,
+        "prices": 648,
+        "produce": 0,
+        "aliases": 38339,
+        "review": 3235,
+        "excluded": 17
+      },
+      "internal": {
+        "master": 54018,
+        "listings": 37747,
+        "prices": 75136,
+        "produce": 0,
+        "aliases": 100844,
+        "review": 3271,
+        "excluded": 269
+      }
+    },
+    "quality_checks": {
+      "duplicate_listings_removed": 0,
+      "duplicate_prices_removed": 0,
+      "orphan_listings": 0,
+      "orphan_prices": 0,
+      "selling_above_mrp_flags": 0
+    }
+  },
+  "sources": [
+    {
+      "source_id": "packsense_india",
+      "name": "PackSense India / Open Food Facts",
+      "url": "https://huggingface.co/datasets/PackSense/packsense-india/resolve/main/india_products.csv",
+      "landing_page": "https://huggingface.co/datasets/PackSense/packsense-india",
+      "license": "ODbL-1.0",
+      "redistributable": true,
+      "status": "available",
+      "local_path": "catalogue_pipeline/raw/packsense_india/india_products.csv",
+      "bytes": 5657152,
+      "sha256": "9007b7a48fe9bc129e6a90a6fc7dfb4dfdcb6a72f53b3a3aabc74eda0d5d1951",
+      "error": ""
+    },
+    {
+      "source_id": "bigbasket_28k",
+      "name": "BigBasket Entire Product List",
+      "url": "https://raw.githubusercontent.com/FuadAnalyst/EDA-Exploratory-Data-Analysis/main/BigBasket%20Products.csv",
+      "landing_page": "https://www.kaggle.com/datasets/surajjha101/bigbasket-entire-product-list-28k-datapoints",
+      "license": "unclear",
+      "redistributable": false,
+      "status": "available",
+      "local_path": "catalogue_pipeline/raw/bigbasket_28k/products.csv",
+      "bytes": 16739247,
+      "sha256": "3b41689c4755f195f60c7a3b00cd3abbc7b04e53834fe7adc0dab582a74189ad",
+      "error": ""
+    },
+    {
+      "source_id": "dmart_5k",
+      "name": "DMart Products",
+      "url": "https://www.kaggle.com/api/v1/datasets/download/chinmayshanbhag/dmart-products",
+      "landing_page": "https://www.kaggle.com/datasets/chinmayshanbhag/dmart-products",
+      "license": "unclear",
+      "redistributable": false,
+      "status": "available",
+      "local_path": "catalogue_pipeline/raw/dmart_5k/DMart.csv",
+      "bytes": 4086356,
+      "sha256": "2cff72decea6e8a91f8a493d529eb78c125418356c5834414339773352189acf",
+      "error": ""
+    },
+    {
+      "source_id": "zepto_inventory",
+      "name": "Zepto E-Commerce Inventory Snapshot",
+      "url": "https://raw.githubusercontent.com/amlanmohanty1/zepto-SQL-data-analysis-project/main/zepto_v2.csv",
+      "landing_page": "https://github.com/amlanmohanty1/zepto-SQL-data-analysis-project",
+      "license": "unclear",
+      "redistributable": false,
+      "status": "available",
+      "local_path": "catalogue_pipeline/raw/zepto_inventory/products.csv",
+      "bytes": 300234,
+      "sha256": "05f33e67581ebc768f380b82acbef664487341249a26bd149f2293528e35fc0f",
+      "error": ""
+    },
+    {
+      "source_id": "jiomart_products",
+      "name": "JioMart Products Dataset",
+      "url": "https://www.kaggle.com/api/v1/datasets/download/mahanidhi/jiomart-products-dataset",
+      "landing_page": "https://www.kaggle.com/datasets/mahanidhi/jiomart-products-dataset",
+      "license": "unclear",
+      "redistributable": false,
+      "status": "available",
+      "local_path": "catalogue_pipeline/raw/jiomart_products/jiomart_products.csv",
+      "bytes": 119761,
+      "sha256": "ecd24d18d85e3fa9dc0470fea967862eb09a0ddd3b583c6ba708e7571c3f9b30",
+      "error": ""
+    },
+    {
+      "source_id": "open_prices_india",
+      "name": "Open Prices India",
+      "url": "https://huggingface.co/datasets/openfoodfacts/open-prices/resolve/main/prices.parquet",
+      "landing_page": "https://openfoodfacts.github.io/open-prices/",
+      "license": "ODbL-1.0",
+      "redistributable": true,
+      "status": "available",
+      "local_path": "catalogue_pipeline/raw/open_prices_india/prices.parquet",
+      "bytes": 81600688,
+      "sha256": "019eee3e89a3bd7ead30b88209cfbd87b091e4f08d2027518cb794f31931fd2c",
+      "error": ""
+    },
+    {
+      "source_id": "agmarknet_daily",
+      "name": "AGMARKNET Daily Mandi Prices",
+      "url": "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070",
+      "landing_page": "https://www.data.gov.in/catalog/current-daily-price-various-commodities-various-markets-mandi",
+      "license": "Government Open Data License - India",
+      "redistributable": true,
+      "status": "skipped",
+      "local_path": "",
+      "bytes": 0,
+      "sha256": "",
+      "error": "RuntimeError: DATA_GOV_IN_API_KEY is not set"
+    }
+  ],
+  "source_stats": {
+    "packsense_india": {
+      "raw_rows": 25209,
+      "needs_review": 3211,
+      "master_created": 21972,
+      "excluded_clothing": 14,
+      "master_merged_exact": 12
+    },
+    "bigbasket_28k": {
+      "raw_rows": 27555,
+      "master_created": 24277,
+      "listings": 27427,
+      "prices": 54854,
+      "excluded_clothing": 127,
+      "master_merged_exact": 3150,
+      "needs_review": 23
+    },
+    "dmart_5k": {
+      "raw_rows": 5189,
+      "master_created": 4910,
+      "listings": 5073,
+      "prices": 10142,
+      "master_merged_exact": 163,
+      "needs_review": 12,
+      "excluded_clothing": 115
+    },
+    "zepto_inventory": {
+      "raw_rows": 3730,
+      "master_created": 1764,
+      "listings": 3723,
+      "prices": 7446,
+      "master_merged_exact": 1959,
+      "needs_review": 1,
+      "excluded_clothing": 7
+    },
+    "jiomart_products": {
+      "raw_rows": 1026,
+      "master_created": 1021,
+      "listings": 1023,
+      "prices": 2046,
+      "master_merged_exact": 2,
+      "excluded_clothing": 3
+    },
+    "open_prices_india": {
+      "raw_rows": 343096,
+      "india_rows": 527,
+      "master_merged_exact": 427,
+      "listings": 501,
+      "prices": 648,
+      "master_created": 74,
+      "needs_review": 24,
+      "excluded_clothing": 3
+    }
+  }
+}

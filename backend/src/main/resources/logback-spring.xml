@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Console logging with masking. Every message AND stack trace goes through %replace, so these never
+  reach the logs, even inside exception or database error texts:
+    - Indian mobile numbers (10 digits starting 6-9)  -> 98XXXXXX10
+    - JWTs (eyJ... . ... . ...)                       -> [jwt]
+    - "password":"..." / password=...                 -> password ***
+  Pickup codes are never passed to a logger (they are only compared, in OrderService).
+  %nopex stops logback from appending its own, unmasked stack trace.
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <property name="MASKED_MESSAGE"
+              value="%replace(%replace(%replace(%replace(%msg%n%wEx){'(?&lt;!\d)([6-9]\d)\d{6}(\d{2})(?!\d)', '$1XXXXXX$2'}){'eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*', '[jwt]'}){'(?i)(\x22password\x22\s*:\s*\x22)[^\x22]*(\x22)', '$1***$2'}){'(?i)(password=)[^&amp;\s,]+', '$1***'}"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %5p ${PID:- } --- [%15.15t] %-40.40logger{39} : ${MASKED_MESSAGE}%nopex</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

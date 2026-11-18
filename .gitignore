@@ -1,0 +1,17 @@
+.run-logs/
+.pgdata/
+**/target/
+**/node_modules/
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/runs/
+frontend/dist/
+backend/uploads/
+.env
+.env.*
+!.env.example
+*.log
+
+# Gradio tunnel cache
+.gradio/

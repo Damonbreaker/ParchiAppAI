@@ -1,0 +1,77 @@
+server:
+  port: 8081
+  compression:
+    enabled: true
+    mime-types: application/json
+    min-response-size: 1KB
+  tomcat:
+    max-swallow-size: 20MB
+
+spring:
+  application:
+    name: parchi-app
+  profiles:
+    default: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/kirana_ai
+    username: ${DB_USERNAME:kirana}
+    password: ${DB_PASSWORD:kirana}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        default_batch_fetch_size: 50
+
+  jackson:
+    generator:
+      write-bigdecimal-as-plain: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-kirana-jwt-secret-change-me-0123456789}
+    expiry-days: 7
+  demo:
+    # Up to 5 nearby shops auto-quote with different prices so demos can compare & accept.
+    auto-quote: ${DEMO_AUTO_QUOTE:true}
+    auto-quote-max-stores: ${DEMO_AUTO_QUOTE_MAX:5}
+    # After accept, auto READY then PICKED_UP so testers reach the rating screen.
+    auto-progress: ${DEMO_AUTO_PROGRESS:true}
+    auto-ready-after-seconds: ${DEMO_AUTO_READY_SEC:3}
+    auto-pickup-after-seconds: ${DEMO_AUTO_PICKUP_SEC:4}
+    # After ready (or accept), reveal pickup OTP to winning shopkeeper for demos.
+    reveal-pickup-code: ${DEMO_REVEAL_PICKUP:true}
+    reveal-pickup-after-seconds: ${DEMO_REVEAL_PICKUP_SEC:4}
+  stores:
+    radius-km: 3
+    max-results: 20
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5174,http://localhost:4173,https://*.trycloudflare.com,https://*.netlify.app,https://*.gradio.live}
+  parchi:
+    # Real OCR is the product default. Tests force reader=mock via application-test.yml.
+    reader: ${PARCHI_READER:local-ocr}
+    mock-delay-ms: 0
+    max-bytes: 5242880
+    ocr-base-url: ${OCR_BASE_URL:http://127.0.0.1:7871}
+    ocr-timeout-ms: 180000
+  rate-limits:
+    login-failures: 5
+    login-window: 15m
+    scans: 20
+    scan-window: 1h
+    requests: 10
+    request-window: 1h

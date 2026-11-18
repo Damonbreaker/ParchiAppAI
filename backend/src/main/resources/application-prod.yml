@@ -1,0 +1,16 @@
+# Production profile (not deployed yet). Run with SPRING_PROFILES_ACTIVE=prod.
+# config.ProdSafetyCheck stops startup if JWT_SECRET or DB_PASSWORD is still the dev default.
+# DevDataSeeder is @Profile("dev") and also refuses to run when "prod" is active.
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/kirana}
+
+server:
+  error:
+    include-message: never
+    include-stacktrace: never
+
+app:
+  cors:
+    allowed-origins: ${CORS_ORIGINS:}

@@ -1,0 +1,12 @@
+<settings>
+  <proxies>
+    <proxy>
+      <id>corp</id>
+      <active>true</active>
+      <protocol>http</protocol>
+      <host>10.10.78.61</host>
+      <port>3128</port>
+      <nonProxyHosts>localhost|127.0.0.1</nonProxyHosts>
+    </proxy>
+  </proxies>
+</settings>

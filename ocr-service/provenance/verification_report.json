@@ -1,0 +1,35 @@
+{
+  "open": {
+    "scope": "open",
+    "passed": true,
+    "errors": [],
+    "counts": {
+      "master": 22046,
+      "listings": 501,
+      "prices": 648,
+      "sources": 7
+    },
+    "valid_gtin_rows": 21526,
+    "source_labeled_mrp_rows": 0,
+    "selling_or_observed_rows": 501,
+    "workbook_bytes": 4271166,
+    "sqlite_bytes": 15814656
+  },
+  "internal": {
+    "scope": "internal",
+    "passed": true,
+    "errors": [],
+    "counts": {
+      "master": 54018,
+      "listings": 37747,
+      "prices": 75136,
+      "sources": 7
+    },
+    "valid_gtin_rows": 21526,
+    "source_labeled_mrp_rows": 3723,
+    "selling_or_observed_rows": 37745,
+    "workbook_bytes": 19402640,
+    "sqlite_bytes": 56279040
+  },
+  "passed": true
+}

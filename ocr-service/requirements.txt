@@ -1,0 +1,17 @@
+paddlepaddle==3.0.0
+paddleocr>=2.7,<3
+fastapi
+uvicorn
+python-multipart
+pillow
+numpy
+gradio>=5.0
+torch
+transformers
+accelerate
+safetensors
+sentencepiece
+opencv-python-headless
+rapidfuzz
+# optional serverless deploy
+# modal

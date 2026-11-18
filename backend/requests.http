@@ -1,0 +1,1190 @@
+### Kirana backend — Phase 1 manual tests
+### VS Code: install the "REST Client" extension (humao.rest-client),
+### then click "Send Request" above each block, top to bottom.
+### Re-running? Change the phone numbers below or you'll get 409 PHONE_TAKEN.
+
+@base = http://localhost:8080/api
+@customerPhone = 9876500001
+@ownerPhone = 9876500002
+
+### 1. Health (public) -> 200 {"status":"OK"}
+GET {{base}}/health
+
+### 2. Register a customer (Hindi name) -> 201 {token, user}
+# @name registerCustomer
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "सीता देवी",
+  "phone": "{{customerPhone}}",
+  "password": "secret1",
+  "role": "CUSTOMER"
+}
+
+### 3. Same phone again -> 409 PHONE_TAKEN
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Someone Else",
+  "phone": "{{customerPhone}}",
+  "password": "secret2",
+  "role": "CUSTOMER"
+}
+
+### 4. Invalid input -> 400 VALIDATION_ERROR with fields.name / phone / password
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "",
+  "phone": "12345",
+  "password": "abc",
+  "role": "CUSTOMER"
+}
+
+### 5. Bad role -> 400 VALIDATION_ERROR, fields.role = "must be one of [CUSTOMER, STORE_OWNER]"
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test",
+  "phone": "9876500099",
+  "password": "secret1",
+  "role": "ADMIN"
+}
+
+### 6. Login (customer) -> 200 {token, user}
+# @name loginCustomer
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "{{customerPhone}}",
+  "password": "secret1"
+}
+
+@customerToken = {{loginCustomer.response.body.token}}
+
+### 7. Wrong password -> 401 INVALID_CREDENTIALS
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "{{customerPhone}}",
+  "password": "wrong-password"
+}
+
+### 8. Unknown phone -> 401 INVALID_CREDENTIALS (same message as 7)
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "9000000000",
+  "password": "secret1"
+}
+
+### 9. /me without token -> 401 UNAUTHORIZED
+GET {{base}}/me
+
+### 10. /me with a garbage token -> 401 "Invalid token"
+GET {{base}}/me
+Authorization: Bearer not.a.real.token
+
+### 11. /me with token -> 200 user
+GET {{base}}/me
+Authorization: Bearer {{customerToken}}
+
+### 12. Switch language to Hindi -> 200, preferredLang "hi"
+PATCH {{base}}/me
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "preferredLang": "hi"
+}
+
+### 13. Change name -> 200, new name
+PATCH {{base}}/me
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "name": "सीता शर्मा"
+}
+
+### 14. Bad language -> 400 VALIDATION_ERROR, fields.preferredLang
+PATCH {{base}}/me
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "preferredLang": "fr"
+}
+
+### 15. Customer hitting a store-owner path -> 403 FORBIDDEN
+GET {{base}}/store/requests
+Authorization: Bearer {{customerToken}}
+
+### 16. Register a store owner -> 201
+# @name registerOwner
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Gupta Kirana",
+  "phone": "{{ownerPhone}}",
+  "password": "secret1",
+  "role": "STORE_OWNER"
+}
+
+@ownerToken = {{registerOwner.response.body.token}}
+
+### 17. Store owner hitting a customer path -> 403 FORBIDDEN
+GET {{base}}/requests/mine
+Authorization: Bearer {{ownerToken}}
+
+### 18. Store owner on own store path -> 404 NOT_FOUND (allowed, no endpoint until Phase 3)
+GET {{base}}/store/requests
+Authorization: Bearer {{ownerToken}}
+
+
+######################################################################
+### PHASE 2 — STORES
+### Uses the dev seed data (printed in the app console on first run).
+### Seed customers: 9000000001-03, store owners: 9000000011-25, password test123.
+### Test location: Noida 28.5050, 77.3800
+######################################################################
+
+@lat = 28.5050
+@lng = 77.3800
+
+### 2.1 Log in as seed customer (Anita Singh)
+# @name seedCustomer
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "9000000001",
+  "password": "test123"
+}
+
+@cToken = {{seedCustomer.response.body.token}}
+
+### 2.2 Log in as seed store owner (Sharma General Store)
+# @name seedOwner
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "9000000011",
+  "password": "test123"
+}
+
+@oToken = {{seedOwner.response.body.token}}
+
+### 2.3 Owner: my store -> 200, includes phone
+GET {{base}}/stores/mine
+Authorization: Bearer {{oToken}}
+
+### 2.4 Owner: second store -> 409 STORE_EXISTS
+POST {{base}}/stores
+Authorization: Bearer {{oToken}}
+Content-Type: application/json
+
+{
+  "name": "Another Store",
+  "address": "Shop 99, Main Market",
+  "area": "Sector 93",
+  "lat": 28.5050,
+  "lng": 77.3800
+}
+
+### 2.5 Owner: close the store -> 200, isOpen false
+PATCH {{base}}/stores/mine
+Authorization: Bearer {{oToken}}
+Content-Type: application/json
+
+{
+  "isOpen": false
+}
+
+### 2.6 Customer: nearby -> 7 stores now (Sharma is closed); no phone field
+GET {{base}}/stores/nearby?lat={{lat}}&lng={{lng}}
+Authorization: Bearer {{cToken}}
+
+### 2.7 Owner: reopen the store -> 200, isOpen true
+PATCH {{base}}/stores/mine
+Authorization: Bearer {{oToken}}
+Content-Type: application/json
+
+{
+  "isOpen": true
+}
+
+### 2.8 Customer: nearby -> 8 stores, 0.2 km ... 2.9 km, Sharma first
+GET {{base}}/stores/nearby?lat={{lat}}&lng={{lng}}
+Authorization: Bearer {{cToken}}
+
+### 2.9 Customer: search by area -> 3 stores in Sector 128 (incl. Om Sai at 3.8 km)
+GET {{base}}/stores/search?q=sector%20128&lat={{lat}}&lng={{lng}}
+Authorization: Bearer {{cToken}}
+
+### 2.10 Customer: search by name -> all "kirana" stores, closed ones have isOpen false
+GET {{base}}/stores/search?q=KIRANA&lat={{lat}}&lng={{lng}}
+Authorization: Bearer {{cToken}}
+
+### 2.11 Customer: Hindi search -> हरि ओम किराना at 5.0 km
+GET {{base}}/stores/search?q=किराना&lat={{lat}}&lng={{lng}}
+Authorization: Bearer {{cToken}}
+
+### 2.12 Customer: search without location -> sorted by name, distanceKm null
+GET {{base}}/stores/search?q=store
+Authorization: Bearer {{cToken}}
+
+### 2.13 Customer: empty q -> same as nearby
+GET {{base}}/stores/search?q=&lat={{lat}}&lng={{lng}}
+Authorization: Bearer {{cToken}}
+
+### 2.14a Helper: capture Sharma General Store's id (run before 2.14b)
+# @name ownerStore
+GET {{base}}/stores/mine
+Authorization: Bearer {{oToken}}
+
+@seedOwnerStoreId = {{ownerStore.response.body.id}}
+
+### 2.14b Customer: store page -> 200, distanceKm 0.2, no phone
+GET {{base}}/stores/{{seedOwnerStoreId}}?lat={{lat}}&lng={{lng}}
+Authorization: Bearer {{cToken}}
+
+### 2.15 Customer: unknown store -> 404 STORE_NOT_FOUND
+GET {{base}}/stores/999999
+Authorization: Bearer {{cToken}}
+
+### 2.16 Customer calling owner endpoint -> 403 FORBIDDEN
+GET {{base}}/stores/mine
+Authorization: Bearer {{cToken}}
+
+### 2.17 Owner calling customer endpoint -> 403 FORBIDDEN
+GET {{base}}/stores/nearby?lat={{lat}}&lng={{lng}}
+Authorization: Bearer {{oToken}}
+
+### 2.18 Bad coordinates -> 400 VALIDATION_ERROR, fields.lat
+GET {{base}}/stores/nearby?lat=200&lng={{lng}}
+Authorization: Bearer {{cToken}}
+
+### 2.19 New owner with no store: register, then GET mine -> 404 NO_STORE
+# @name newOwner
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "New Owner",
+  "phone": "9876500003",
+  "password": "secret1",
+  "role": "STORE_OWNER"
+}
+
+@nToken = {{newOwner.response.body.token}}
+
+### 2.20 New owner: GET mine -> 404 NO_STORE
+GET {{base}}/stores/mine
+Authorization: Bearer {{nToken}}
+
+### 2.21 New owner: invalid store -> 400 with fields.name, address, lat
+POST {{base}}/stores
+Authorization: Bearer {{nToken}}
+Content-Type: application/json
+
+{
+  "name": "",
+  "address": "",
+  "area": "Sector 135",
+  "lat": 95,
+  "lng": 77.38
+}
+
+### 2.22 New owner: create store (Hindi name, no phone -> owner's phone) -> 201
+POST {{base}}/stores
+Authorization: Bearer {{nToken}}
+Content-Type: application/json
+
+{
+  "name": "श्री राम किराना",
+  "address": "Shop 7, Market Road",
+  "area": "Sector 135",
+  "lat": 28.5100,
+  "lng": 77.3850
+}
+
+### 2.23 Customer: Hindi search finds the new store too (0.7 km away)
+GET {{base}}/stores/search?q=राम&lat={{lat}}&lng={{lng}}
+Authorization: Bearer {{cToken}}
+
+
+######################################################################
+### PHASE 3 — TYPED REQUESTS
+### Run 2.1 / 2.2 first if you haven't (they set @lat, @lng and tokens),
+### or just run the two logins below.
+### Seed requests #1-#4 already exist; Sharma General Store (9000000011)
+### and Gupta Kirana (9000000012) received all four.
+######################################################################
+
+### 3.1 Login as seed customer Anita (9000000001)
+# @name p3Customer
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "9000000001",
+  "password": "test123"
+}
+
+@p3c = {{p3Customer.response.body.token}}
+
+### 3.2 Create a NEAREST request -> 201, 5 targets sorted by distance, status OPEN
+# @name nearestReq
+POST {{base}}/requests
+Authorization: Bearer {{p3c}}
+Content-Type: application/json
+
+{
+  "mode": "NEAREST",
+  "lat": 28.5050,
+  "lng": 77.3800,
+  "items": [
+    { "name": "Aashirvaad atta", "quantity": 5, "unit": "KG" },
+    { "name": "चीनी", "quantity": 2, "unit": "KG" },
+    { "name": "Amul butter", "quantity": 1, "unit": "PACKET" },
+    { "name": "अंडे", "quantity": 1, "unit": "DOZEN" },
+    { "name": "Haldi", "quantity": 250, "unit": "G" },
+    { "name": "Doodh", "quantity": 1.5, "unit": "L" }
+  ]
+}
+
+@nearestId = {{nearestReq.response.body.id}}
+
+### 3.3 Find a store for DIRECT (Gupta Kirana; copy nothing, id is captured)
+# @name gupta
+GET {{base}}/stores/search?q=gupta&lat=28.5050&lng=77.3800
+Authorization: Bearer {{p3c}}
+
+@guptaId = {{gupta.response.body.$[0].id}}
+
+### 3.4 Create a DIRECT request to Gupta Kirana -> 201, exactly 1 target
+# @name directReq
+POST {{base}}/requests
+Authorization: Bearer {{p3c}}
+Content-Type: application/json
+
+{
+  "mode": "DIRECT",
+  "storeId": {{guptaId}},
+  "lat": 28.5050,
+  "lng": 77.3800,
+  "items": [
+    { "name": "Tata salt", "quantity": 1, "unit": "KG" },
+    { "name": "Parle-G", "quantity": 2, "unit": "PACKET" }
+  ]
+}
+
+@directId = {{directReq.response.body.id}}
+
+### 3.5 DIRECT to a closed store (Agarwal Kirana Store) -> 409 STORE_CLOSED
+# @name agarwal
+GET {{base}}/stores/search?q=agarwal
+Authorization: Bearer {{p3c}}
+
+@agarwalId = {{agarwal.response.body.$[0].id}}
+
+### 3.6 (send after 3.5)
+POST {{base}}/requests
+Authorization: Bearer {{p3c}}
+Content-Type: application/json
+
+{
+  "mode": "DIRECT",
+  "storeId": {{agarwalId}},
+  "lat": 28.5050,
+  "lng": 77.3800,
+  "items": [ { "name": "Atta", "quantity": 1, "unit": "KG" } ]
+}
+
+### 3.7 NEAREST far from every store -> 422 NO_STORES_NEARBY
+POST {{base}}/requests
+Authorization: Bearer {{p3c}}
+Content-Type: application/json
+
+{
+  "mode": "NEAREST",
+  "lat": 28.7041,
+  "lng": 77.1025,
+  "items": [ { "name": "Atta", "quantity": 1, "unit": "KG" } ]
+}
+
+### 3.8 Validation -> 400, fields["items[0].quantity"], fields["items[1].unit"]
+POST {{base}}/requests
+Authorization: Bearer {{p3c}}
+Content-Type: application/json
+
+{
+  "mode": "NEAREST",
+  "lat": 28.5050,
+  "lng": 77.3800,
+  "items": [
+    { "name": "Atta", "quantity": 0, "unit": "KG" },
+    { "name": "Rice", "quantity": 1, "unit": "BORI" }
+  ]
+}
+
+### 3.9 My requests -> newest first, itemCount, storesSentCount, quotesCount 0, preview (3 names)
+GET {{base}}/requests/mine
+Authorization: Bearer {{p3c}}
+
+### 3.10 One request -> items + targets (storeName, area, distanceKm, seen), no phones
+GET {{base}}/requests/{{nearestId}}
+Authorization: Bearer {{p3c}}
+
+### 3.11 Cancel the DIRECT request -> 200, status CANCELLED
+POST {{base}}/requests/{{directId}}/cancel
+Authorization: Bearer {{p3c}}
+
+### 3.12 Cancel it again -> 409 INVALID_STATUS
+POST {{base}}/requests/{{directId}}/cancel
+Authorization: Bearer {{p3c}}
+
+### 3.13 Another customer (Priya) can't see Anita's request -> 404 REQUEST_NOT_FOUND
+# @name p3Other
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "9000000003",
+  "password": "test123"
+}
+
+### 3.14 (send after 3.13)
+GET {{base}}/requests/{{nearestId}}
+Authorization: Bearer {{p3Other.response.body.token}}
+
+### ---------------- store side ----------------
+
+### 3.15 Login as Gupta Kirana owner (9000000012) — received the seed requests,
+###      3.2 (nearest) and 3.4 (direct)
+# @name p3Owner
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "9000000012",
+  "password": "test123"
+}
+
+@p3o = {{p3Owner.response.body.token}}
+
+### 3.16 Inbox, open only -> newest first, isNew true, distanceKm, preview
+GET {{base}}/store/requests?status=OPEN
+Authorization: Bearer {{p3o}}
+
+### 3.17 Inbox, closed -> the cancelled DIRECT request from 3.11
+GET {{base}}/store/requests?status=CLOSED
+Authorization: Bearer {{p3o}}
+
+### 3.18 Open the NEAREST request -> items + distanceKm + seenAt; no customer name/phone/location
+GET {{base}}/store/requests/{{nearestId}}
+Authorization: Bearer {{p3o}}
+
+### 3.19 Inbox again -> that request now has isNew false
+GET {{base}}/store/requests?status=OPEN
+Authorization: Bearer {{p3o}}
+
+### 3.20 Customer view now shows Gupta Kirana as seen: true
+GET {{base}}/requests/{{nearestId}}
+Authorization: Bearer {{p3c}}
+
+### 3.21 A store that did NOT receive it (Laxmi Super Mart, 4.6 km) -> 404
+# @name p3Far
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "9000000024",
+  "password": "test123"
+}
+
+### 3.22 (send after 3.21)
+GET {{base}}/store/requests/{{nearestId}}
+Authorization: Bearer {{p3Far.response.body.token}}
+
+
+######################################################################
+### PHASE 4 — Quotes. Start the app first (seed quotes are added on
+### startup if no quotes exist: seed request #1 gets 3 quotes, #2 gets 2).
+### Run 4.1 -> 4.20 top to bottom; ids are captured automatically.
+### linePrice = total for the line in rupees, not per unit.
+######################################################################
+
+### 4.1 Login as seed customer Anita (9000000001)
+# @name p4Customer
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "9000000001",
+  "password": "test123"
+}
+
+@p4c = {{p4Customer.response.body.token}}
+
+### 4.2 Create a fresh NEAREST request with 3 items -> 201 (Sharma and Gupta are the 2 nearest)
+# @name p4Req
+POST {{base}}/requests
+Authorization: Bearer {{p4c}}
+Content-Type: application/json
+
+{
+  "mode": "NEAREST",
+  "lat": 28.5050,
+  "lng": 77.3800,
+  "items": [
+    { "name": "Aashirvaad atta", "quantity": 5, "unit": "KG" },
+    { "name": "Amul butter", "quantity": 500, "unit": "G" },
+    { "name": "अंडे", "quantity": 1, "unit": "DOZEN" }
+  ]
+}
+
+@p4Id = {{p4Req.response.body.id}}
+@item1 = {{p4Req.response.body.$.items[0].id}}
+@item2 = {{p4Req.response.body.$.items[1].id}}
+@item3 = {{p4Req.response.body.$.items[2].id}}
+
+### ---------------- store side: Sharma General Store ----------------
+
+### 4.3 Login as Sharma General Store owner (9000000011, 0.2 km)
+# @name p4Sharma
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "9000000011",
+  "password": "test123"
+}
+
+@p4s = {{p4Sharma.response.body.token}}
+
+### 4.4 Open the request -> items, myQuote: null
+GET {{base}}/store/requests/{{p4Id}}
+Authorization: Bearer {{p4s}}
+
+### 4.5 Send a quote -> 200, status SUBMITTED, totalPrice 340.00
+###     (280 + 60; eggs UNAVAILABLE so their 12/99 is forced to 0; the "totalPrice": 1 is ignored;
+###      butter asked 500 G, offered 1 PACKET)
+# @name p4Quote
+PUT {{base}}/store/requests/{{p4Id}}/quote
+Authorization: Bearer {{p4s}}
+Content-Type: application/json
+
+{
+  "packingTimeMins": 15,
+  "totalPrice": 1,
+  "items": [
+    { "requestItemId": {{item1}}, "offeredQty": 5, "unit": "KG", "linePrice": 280, "status": "AVAILABLE" },
+    { "requestItemId": {{item2}}, "offeredQty": 1, "unit": "PACKET", "linePrice": 60, "status": "AVAILABLE" },
+    { "requestItemId": {{item3}}, "offeredQty": 12, "unit": "PCS", "linePrice": 99, "status": "UNAVAILABLE" }
+  ]
+}
+
+### 4.6 Missing an item -> 400 VALIDATION_ERROR, fields.items "missing requestItemId ..."
+PUT {{base}}/store/requests/{{p4Id}}/quote
+Authorization: Bearer {{p4s}}
+Content-Type: application/json
+
+{
+  "packingTimeMins": 15,
+  "items": [
+    { "requestItemId": {{item1}}, "offeredQty": 5, "unit": "KG", "linePrice": 280, "status": "AVAILABLE" }
+  ]
+}
+
+### 4.7 Bad lines -> 400: fields["items[0].linePrice"] must be greater than 0,
+###     fields["items[1].offeredQty"] is required, packingTimeMins must be between 5 and 240
+PUT {{base}}/store/requests/{{p4Id}}/quote
+Authorization: Bearer {{p4s}}
+Content-Type: application/json
+
+{
+  "packingTimeMins": 300,
+  "items": [
+    { "requestItemId": {{item1}}, "offeredQty": 5, "unit": "KG", "linePrice": 0, "status": "AVAILABLE" },
+    { "requestItemId": {{item2}}, "unit": "PACKET", "linePrice": 60, "status": "PARTIAL" },
+    { "requestItemId": {{item3}}, "status": "UNAVAILABLE" }
+  ]
+}
+
+### 4.8 Update the quote (eggs now PARTIAL: 6 PCS for 42, packing 20) -> 200,
+###     SAME quoteId as 4.5, totalPrice 382.00, newer updatedAt
+PUT {{base}}/store/requests/{{p4Id}}/quote
+Authorization: Bearer {{p4s}}
+Content-Type: application/json
+
+{
+  "packingTimeMins": 20,
+  "items": [
+    { "requestItemId": {{item1}}, "offeredQty": 5, "unit": "KG", "linePrice": 280, "status": "AVAILABLE" },
+    { "requestItemId": {{item2}}, "offeredQty": 1, "unit": "PACKET", "linePrice": 60, "status": "AVAILABLE" },
+    { "requestItemId": {{item3}}, "offeredQty": 6, "unit": "PCS", "linePrice": 42, "status": "PARTIAL" }
+  ]
+}
+
+### 4.9 Inbox -> this request has myQuoteTotal 382.00 (requests not quoted yet: null)
+GET {{base}}/store/requests?status=OPEN
+Authorization: Bearer {{p4s}}
+
+### 4.10 Open it again -> myQuote with the 3 lines, packingTimeMins 20
+GET {{base}}/store/requests/{{p4Id}}
+Authorization: Bearer {{p4s}}
+
+### ---------------- store side: Gupta Kirana ----------------
+
+### 4.11 Login as Gupta Kirana owner (9000000012, 0.5 km)
+# @name p4Gupta
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "9000000012",
+  "password": "test123"
+}
+
+### 4.12 Gupta quotes everything -> 200, totalPrice 409.00, packing 30
+PUT {{base}}/store/requests/{{p4Id}}/quote
+Authorization: Bearer {{p4Gupta.response.body.token}}
+Content-Type: application/json
+
+{
+  "packingTimeMins": 30,
+  "items": [
+    { "requestItemId": {{item1}}, "offeredQty": 5, "unit": "KG", "linePrice": 275, "status": "AVAILABLE" },
+    { "requestItemId": {{item2}}, "offeredQty": 500, "unit": "G", "linePrice": 50, "status": "AVAILABLE" },
+    { "requestItemId": {{item3}}, "offeredQty": 1, "unit": "DOZEN", "linePrice": 84, "status": "AVAILABLE" }
+  ]
+}
+
+### 4.13 A store that did NOT receive it (Laxmi Super Mart, 4.6 km): login
+# @name p4Far
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "9000000024",
+  "password": "test123"
+}
+
+### 4.14 (send after 4.13) Laxmi tries to quote -> 404 REQUEST_NOT_FOUND
+PUT {{base}}/store/requests/{{p4Id}}/quote
+Authorization: Bearer {{p4Far.response.body.token}}
+Content-Type: application/json
+
+{
+  "packingTimeMins": 10,
+  "items": [
+    { "requestItemId": {{item1}}, "offeredQty": 5, "unit": "KG", "linePrice": 1, "status": "AVAILABLE" },
+    { "requestItemId": {{item2}}, "offeredQty": 1, "unit": "PACKET", "linePrice": 1, "status": "AVAILABLE" },
+    { "requestItemId": {{item3}}, "offeredQty": 1, "unit": "DOZEN", "linePrice": 1, "status": "AVAILABLE" }
+  ]
+}
+
+### ---------------- customer side ----------------
+
+### 4.15 Customer reads the request -> quotes: Sharma 382.00 (2 available, 1 partial) first,
+###      then Gupta 409.00 (3 available); each line shows askedQty/askedUnit vs offeredQty/unit;
+###      targets: Sharma and Gupta quoted true, the other 3 false; no store phones
+GET {{base}}/requests/{{p4Id}}
+Authorization: Bearer {{p4c}}
+
+### 4.16 My requests -> this one: quotesCount 2, lowestTotal 382.00
+GET {{base}}/requests/mine
+Authorization: Bearer {{p4c}}
+
+### 4.17 Seed request #1 (Anita's) -> 3 seed quotes, one with an UNAVAILABLE line (Doodh)
+GET {{base}}/requests/1
+Authorization: Bearer {{p4c}}
+
+### ---------------- cancel rejects quotes ----------------
+
+### 4.18 Cancel the request -> 200 CANCELLED, both quotes status REJECTED
+POST {{base}}/requests/{{p4Id}}/cancel
+Authorization: Bearer {{p4c}}
+
+### 4.19 Sharma tries to update the quote -> 409 REQUEST_CLOSED
+PUT {{base}}/store/requests/{{p4Id}}/quote
+Authorization: Bearer {{p4s}}
+Content-Type: application/json
+
+{
+  "packingTimeMins": 20,
+  "items": [
+    { "requestItemId": {{item1}}, "offeredQty": 5, "unit": "KG", "linePrice": 270, "status": "AVAILABLE" },
+    { "requestItemId": {{item2}}, "offeredQty": 1, "unit": "PACKET", "linePrice": 60, "status": "AVAILABLE" },
+    { "requestItemId": {{item3}}, "offeredQty": 6, "unit": "PCS", "linePrice": 42, "status": "PARTIAL" }
+  ]
+}
+
+### 4.20 Sharma's view -> request CANCELLED, myQuote.status REJECTED
+GET {{base}}/store/requests/{{p4Id}}
+Authorization: Bearer {{p4s}}
+
+
+######################################################################
+### PHASE 5 — Accept and lock, contacts, Ready, Picked up, history.
+### Self-contained and re-runnable: makes a fresh request each time.
+### Run 5.1 -> 5.24 top to bottom; ids and the pickup code are captured.
+######################################################################
+
+### 5.1 Login as seed customer Anita (9000000001)
+# @name p5Customer
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "9000000001",
+  "password": "test123"
+}
+
+@p5c = {{p5Customer.response.body.token}}
+
+### 5.2 Create a NEAREST request -> 201 (goes to Sharma 0.2 km, Gupta 0.5 km, ...)
+# @name p5Req
+POST {{base}}/requests
+Authorization: Bearer {{p5c}}
+Content-Type: application/json
+
+{
+  "mode": "NEAREST",
+  "lat": 28.5050,
+  "lng": 77.3800,
+  "items": [
+    { "name": "Aashirvaad atta", "quantity": 5, "unit": "KG" },
+    { "name": "Tata salt", "quantity": 1, "unit": "KG" }
+  ]
+}
+
+@p5Id = {{p5Req.response.body.id}}
+@p5i1 = {{p5Req.response.body.$.items[0].id}}
+@p5i2 = {{p5Req.response.body.$.items[1].id}}
+
+### 5.3 Login as Sharma General Store owner (9000000011)
+# @name p5Sharma
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "9000000011",
+  "password": "test123"
+}
+
+@p5s = {{p5Sharma.response.body.token}}
+
+### 5.4 Sharma quotes -> 200, totalPrice 308.00, packing 15
+# @name p5SharmaQuote
+PUT {{base}}/store/requests/{{p5Id}}/quote
+Authorization: Bearer {{p5s}}
+Content-Type: application/json
+
+{
+  "packingTimeMins": 15,
+  "items": [
+    { "requestItemId": {{p5i1}}, "offeredQty": 5, "unit": "KG", "linePrice": 280, "status": "AVAILABLE" },
+    { "requestItemId": {{p5i2}}, "offeredQty": 1, "unit": "KG", "linePrice": 28, "status": "AVAILABLE" }
+  ]
+}
+
+@sharmaQuote = {{p5SharmaQuote.response.body.quoteId}}
+
+### 5.5 Login as Gupta Kirana owner (9000000012)
+# @name p5Gupta
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "phone": "9000000012",
+  "password": "test123"
+}
+
+@p5g = {{p5Gupta.response.body.token}}
+
+### 5.6 Gupta quotes -> 200, totalPrice 302.00, packing 25
+# @name p5GuptaQuote
+PUT {{base}}/store/requests/{{p5Id}}/quote
+Authorization: Bearer {{p5g}}
+Content-Type: application/json
+
+{
+  "packingTimeMins": 25,
+  "items": [
+    { "requestItemId": {{p5i1}}, "offeredQty": 5, "unit": "KG", "linePrice": 275, "status": "AVAILABLE" },
+    { "requestItemId": {{p5i2}}, "offeredQty": 1, "unit": "KG", "linePrice": 27, "status": "AVAILABLE" }
+  ]
+}
+
+@guptaQuote = {{p5GuptaQuote.response.body.quoteId}}
+
+### ---------------- customer accepts ----------------
+
+### 5.7 Customer reads the request -> 2 quotes (Gupta 302 first), acceptedStore null, no phones anywhere
+GET {{base}}/requests/{{p5Id}}
+Authorization: Bearer {{p5c}}
+
+### 5.8 Meanwhile Gupta lowers the atta price -> 200, totalPrice 297.00
+PUT {{base}}/store/requests/{{p5Id}}/quote
+Authorization: Bearer {{p5g}}
+Content-Type: application/json
+
+{
+  "packingTimeMins": 25,
+  "items": [
+    { "requestItemId": {{p5i1}}, "offeredQty": 5, "unit": "KG", "linePrice": 270, "status": "AVAILABLE" },
+    { "requestItemId": {{p5i2}}, "offeredQty": 1, "unit": "KG", "linePrice": 27, "status": "AVAILABLE" }
+  ]
+}
+
+### 5.9 Customer accepts Gupta with the total they saw (302) -> 409 QUOTE_CHANGED,
+###     body.quote = current quote with totalPrice 297.00; nothing changed (request still OPEN)
+POST {{base}}/requests/{{p5Id}}/accept/{{guptaQuote}}
+Authorization: Bearer {{p5c}}
+Content-Type: application/json
+
+{ "expectedTotal": 302 }
+
+### 5.10 Accept again with the new total -> 200 ACCEPTED: pickupCode (4 digits), acceptedAt,
+###      readyBy = acceptedAt + 25 min, acceptedStore = Gupta Kirana with address + phone 9000000012;
+###      Gupta's quote ACCEPTED, Sharma's REJECTED
+# @name p5Accept
+POST {{base}}/requests/{{p5Id}}/accept/{{guptaQuote}}
+Authorization: Bearer {{p5c}}
+Content-Type: application/json
+
+{ "expectedTotal": 297 }
+
+@pickupCode = {{p5Accept.response.body.pickupCode}}
+
+### 5.11 Try to accept Sharma's quote too -> 409 REQUEST_NOT_OPEN
+POST {{base}}/requests/{{p5Id}}/accept/{{sharmaQuote}}
+Authorization: Bearer {{p5c}}
+Content-Type: application/json
+
+{ "expectedTotal": 308 }
+
+### 5.12 My requests (history) -> this one: status ACCEPTED, acceptedStoreName "Gupta Kirana",
+###      acceptedTotal 297.00, readyBy
+GET {{base}}/requests/mine
+Authorization: Bearer {{p5c}}
+
+### ---------------- losing store (Sharma) ----------------
+
+### 5.13 Sharma opens it -> outcome LOST, customer/acceptedAt/readyBy null, no pickup code,
+###      nothing about Gupta; myQuote.status REJECTED
+GET {{base}}/store/requests/{{p5Id}}
+Authorization: Bearer {{p5s}}
+
+### 5.14 Sharma's CLOSED list -> this request with outcome LOST, customerName null
+GET {{base}}/store/requests?status=CLOSED
+Authorization: Bearer {{p5s}}
+
+### 5.15 Sharma tries to mark it ready -> 404 REQUEST_NOT_FOUND
+POST {{base}}/store/requests/{{p5Id}}/ready
+Authorization: Bearer {{p5s}}
+
+### 5.16 Sharma tries to edit the quote -> 409 REQUEST_CLOSED
+PUT {{base}}/store/requests/{{p5Id}}/quote
+Authorization: Bearer {{p5s}}
+Content-Type: application/json
+
+{
+  "packingTimeMins": 10,
+  "items": [
+    { "requestItemId": {{p5i1}}, "offeredQty": 5, "unit": "KG", "linePrice": 250, "status": "AVAILABLE" },
+    { "requestItemId": {{p5i2}}, "offeredQty": 1, "unit": "KG", "linePrice": 25, "status": "AVAILABLE" }
+  ]
+}
+
+### ---------------- winning store (Gupta) ----------------
+
+### 5.17 Gupta opens it -> outcome WON, status ACCEPTED, customer { name "Anita Singh", phone 9000000001 },
+###      acceptedAt, readyBy; no pickupCode field
+GET {{base}}/store/requests/{{p5Id}}
+Authorization: Bearer {{p5g}}
+
+### 5.18 Gupta's ORDERS list -> this request: outcome WON, customerName, myQuoteTotal 297.00, readyBy
+GET {{base}}/store/requests?status=ORDERS
+Authorization: Bearer {{p5g}}
+
+### 5.19 Gupta marks it ready -> 200, status READY, readyAt set
+POST {{base}}/store/requests/{{p5Id}}/ready
+Authorization: Bearer {{p5g}}
+
+### 5.20 Ready again -> 409 INVALID_STATUS
+POST {{base}}/store/requests/{{p5Id}}/ready
+Authorization: Bearer {{p5g}}
+
+### 5.21 Wrong pickup code -> 400 WRONG_PICKUP_CODE (1 in 10,000 chance 0000 is the real code)
+POST {{base}}/store/requests/{{p5Id}}/picked-up
+Authorization: Bearer {{p5g}}
+Content-Type: application/json
+
+{ "pickupCode": "0000" }
+
+### 5.22 Right code (the one the customer saw in 5.10) -> 200, status PICKED_UP, pickedUpAt set
+POST {{base}}/store/requests/{{p5Id}}/picked-up
+Authorization: Bearer {{p5g}}
+Content-Type: application/json
+
+{ "pickupCode": "{{pickupCode}}" }
+
+### 5.23 Gupta's CLOSED list -> this request with outcome WON (it left ORDERS)
+GET {{base}}/store/requests?status=CLOSED
+Authorization: Bearer {{p5g}}
+
+### 5.24 Customer view -> status PICKED_UP with acceptedAt, readyAt, pickedUpAt, pickupCode, acceptedStore
+GET {{base}}/requests/{{p5Id}}
+Authorization: Bearer {{p5c}}
+
+######################################################################
+### PHASE 6 (as changed in Phase 7) — one-time parchi scan, nothing stored.
+### Uses samples/parchi.jpg (a drawn parchi) and samples/not-an-image.jpg (text renamed .jpg).
+### The mock reader picks 1 of 3 sample parchis from a hash of the photo, so the
+### returned items don't match what's drawn in parchi.jpg; a real OCR will.
+######################################################################
+
+### 6.1 Login as seed customer Anita (9000000001)
+# @name p6Customer
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "phone": "9000000001", "password": "test123" }
+
+@p6c = {{p6Customer.response.body.token}}
+
+### 6.2 Scan the parchi -> 200 {items:[{name, quantity, unit, confident}]}, no imageId (~0.8 s mock delay)
+POST {{base}}/parchi/scan
+Authorization: Bearer {{p6c}}
+Content-Type: multipart/form-data; boundary=ParchiBoundary
+
+--ParchiBoundary
+Content-Disposition: form-data; name="image"; filename="parchi.jpg"
+Content-Type: image/jpeg
+
+< ./samples/parchi.jpg
+--ParchiBoundary--
+
+### 6.3 A text file renamed to .jpg -> 400 UNSUPPORTED_IMAGE (magic bytes are checked, not the name/header)
+POST {{base}}/parchi/scan
+Authorization: Bearer {{p6c}}
+Content-Type: multipart/form-data; boundary=ParchiBoundary
+
+--ParchiBoundary
+Content-Disposition: form-data; name="image"; filename="not-an-image.jpg"
+Content-Type: image/jpeg
+
+< ./samples/not-an-image.jpg
+--ParchiBoundary--
+
+### 6.4 No "image" field -> 400 VALIDATION_ERROR, fields.image = "is required"
+POST {{base}}/parchi/scan
+Authorization: Bearer {{p6c}}
+Content-Type: multipart/form-data; boundary=ParchiBoundary
+
+--ParchiBoundary
+Content-Disposition: form-data; name="photo"
+
+nothing
+--ParchiBoundary--
+
+### 6.5 Send the reviewed list with fromPhoto=true -> 201, source PHOTO (no hasImage field).
+###     Items come from this body (the customer's edited list), not from the scan.
+POST {{base}}/requests
+Authorization: Bearer {{p6c}}
+Content-Type: application/json
+
+{
+  "mode": "NEAREST",
+  "lat": 28.5050,
+  "lng": 77.3800,
+  "fromPhoto": true,
+  "items": [
+    { "name": "aata", "quantity": 5, "unit": "KG" },
+    { "name": "चीनी", "quantity": 2, "unit": "KG" },
+    { "name": "bread", "quantity": 1, "unit": "PCS" }
+  ]
+}
+
+
+######################################################################
+### PHASE 7 — one-time scan, pickup-code lock, rate limits, pagination.
+### Self-contained. Run 7.1 -> 7.21 top to bottom.
+### Rate limits live in memory: restarting the backend clears them.
+######################################################################
+
+### 7.1 Login as Anita (customer, 9000000001)
+# @name p7Customer
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "phone": "9000000001", "password": "test123" }
+
+@p7c = {{p7Customer.response.body.token}}
+
+### 7.2 Scan -> 200 {items:[...]} only: no imageId, nothing saved anywhere
+POST {{base}}/parchi/scan
+Authorization: Bearer {{p7c}}
+Content-Type: multipart/form-data; boundary=ParchiBoundary
+
+--ParchiBoundary
+Content-Disposition: form-data; name="image"; filename="parchi.jpg"
+Content-Type: image/jpeg
+
+< ./samples/parchi.jpg
+--ParchiBoundary--
+
+### 7.3 Send the reviewed list with fromPhoto=true -> 201, "source": "PHOTO"
+# @name p7Req
+POST {{base}}/requests
+Authorization: Bearer {{p7c}}
+Content-Type: application/json
+
+{
+  "mode": "NEAREST",
+  "lat": 28.5050,
+  "lng": 77.3800,
+  "fromPhoto": true,
+  "items": [ { "name": "aata", "quantity": 5, "unit": "KG" } ]
+}
+
+@p7Id = {{p7Req.response.body.id}}
+@p7Item = {{p7Req.response.body.$.items[0].id}}
+
+### 7.4 Login as Sharma General Store (9000000011)
+# @name p7Sharma
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "phone": "9000000011", "password": "test123" }
+
+@p7s = {{p7Sharma.response.body.token}}
+
+### 7.5 Sharma quotes 250 -> 200
+# @name p7Quote
+PUT {{base}}/store/requests/{{p7Id}}/quote
+Authorization: Bearer {{p7s}}
+Content-Type: application/json
+
+{
+  "packingTimeMins": 10,
+  "items": [ { "requestItemId": {{p7Item}}, "offeredQty": 5, "unit": "KG", "linePrice": 250, "status": "AVAILABLE" } ]
+}
+
+@p7QuoteId = {{p7Quote.response.body.quoteId}}
+
+### 7.6 Anita accepts -> 200 with pickupCode
+# @name p7Accept
+POST {{base}}/requests/{{p7Id}}/accept/{{p7QuoteId}}
+Authorization: Bearer {{p7c}}
+Content-Type: application/json
+
+{ "expectedTotal": 250 }
+
+@p7Code = {{p7Accept.response.body.pickupCode}}
+
+### 7.7 – 7.11 Five wrong codes -> 400 WRONG_PICKUP_CODE: "4 tries left" ... "1 try left",
+###     then the 5th says "Locked for 15 minutes." (1 in 10,000 chance 0000 is the real code)
+### 7.7 wrong code #1
+POST {{base}}/store/requests/{{p7Id}}/picked-up
+Authorization: Bearer {{p7s}}
+Content-Type: application/json
+
+{ "pickupCode": "0000" }
+
+### 7.8 wrong code #2
+POST {{base}}/store/requests/{{p7Id}}/picked-up
+Authorization: Bearer {{p7s}}
+Content-Type: application/json
+
+{ "pickupCode": "0000" }
+
+### 7.9 wrong code #3
+POST {{base}}/store/requests/{{p7Id}}/picked-up
+Authorization: Bearer {{p7s}}
+Content-Type: application/json
+
+{ "pickupCode": "0000" }
+
+### 7.10 wrong code #4
+POST {{base}}/store/requests/{{p7Id}}/picked-up
+Authorization: Bearer {{p7s}}
+Content-Type: application/json
+
+{ "pickupCode": "0000" }
+
+### 7.11 wrong code #5 -> 400 "... Locked for 15 minutes."
+POST {{base}}/store/requests/{{p7Id}}/picked-up
+Authorization: Bearer {{p7s}}
+Content-Type: application/json
+
+{ "pickupCode": "0000" }
+
+### 7.12 6th try, even with the RIGHT code -> 429 TOO_MANY_ATTEMPTS, retryAfterSeconds ~900, Retry-After header
+POST {{base}}/store/requests/{{p7Id}}/picked-up
+Authorization: Bearer {{p7s}}
+Content-Type: application/json
+
+{ "pickupCode": "{{p7Code}}" }
+
+### 7.13 – 7.17 Login rate limit, on a number that has no account: 5 x 401 INVALID_CREDENTIALS ...
+### 7.13 failed login #1
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "phone": "9999999990", "password": "wrong-pass" }
+
+### 7.14 failed login #2
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "phone": "9999999990", "password": "wrong-pass" }
+
+### 7.15 failed login #3
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "phone": "9999999990", "password": "wrong-pass" }
+
+### 7.16 failed login #4
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "phone": "9999999990", "password": "wrong-pass" }
+
+### 7.17 failed login #5
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "phone": "9999999990", "password": "wrong-pass" }
+
+### 7.18 ... and the 6th -> 429 TOO_MANY_ATTEMPTS with retryAfterSeconds (other numbers still log in)
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "phone": "9999999990", "password": "wrong-pass" }
+
+### 7.19 Paginated inbox, page 0 of size 2 -> {items: [2 rows], page: 0, hasMore: true}
+GET {{base}}/store/requests?page=0&size=2
+Authorization: Bearer {{p7s}}
+
+### 7.20 Next page -> {items, page: 1, hasMore: ...}; also works with ?status=OPEN|ORDERS|CLOSED
+GET {{base}}/store/requests?page=1&size=2
+Authorization: Bearer {{p7s}}
+
+### 7.21 size over 50 -> 400 VALIDATION_ERROR, fields.size = "must be between 1 and 50"
+GET {{base}}/store/requests?size=51
+Authorization: Bearer {{p7s}}

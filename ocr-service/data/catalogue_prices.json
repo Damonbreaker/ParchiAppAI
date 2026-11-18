@@ -1,0 +1,180 @@
+{
+  "currency": "INR",
+  "disclaimer": "Rough India market estimates for bill preview. Update anytime.",
+  "items": [
+    {
+      "canonical": "Aloo",
+      "ref_price": 30,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Arhar Dal",
+      "ref_price": 160,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Atta",
+      "ref_price": 42,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Basmati Rice",
+      "ref_price": 120,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Biscuit",
+      "ref_price": 30,
+      "price_unit": "per_packet",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Bread",
+      "ref_price": 40,
+      "price_unit": "flat",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Buffalo Milk",
+      "ref_price": 70,
+      "price_unit": "per_L",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Butter",
+      "ref_price": 560,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Chawal",
+      "ref_price": 60,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Chicken",
+      "ref_price": 220,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Dahi",
+      "ref_price": 60,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Detergent",
+      "ref_price": 80,
+      "price_unit": "flat",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Eggs",
+      "ref_price": 7,
+      "price_unit": "per_pcs",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Fish",
+      "ref_price": 300,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Ghee",
+      "ref_price": 550,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Maggi",
+      "ref_price": 14,
+      "price_unit": "per_packet",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Milk",
+      "ref_price": 56,
+      "price_unit": "per_L",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Moong Dal",
+      "ref_price": 140,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Mustard Oil",
+      "ref_price": 160,
+      "price_unit": "per_L",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Mutton",
+      "ref_price": 750,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Namak",
+      "ref_price": 25,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Oats",
+      "ref_price": 200,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Oil",
+      "ref_price": 140,
+      "price_unit": "per_L",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Paneer",
+      "ref_price": 360,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Pyaz",
+      "ref_price": 35,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Soap",
+      "ref_price": 30,
+      "price_unit": "per_pcs",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Sugar",
+      "ref_price": 45,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Tamatar",
+      "ref_price": 40,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    },
+    {
+      "canonical": "Tea",
+      "ref_price": 400,
+      "price_unit": "per_kg",
+      "note": "seed estimate - edit for your city/store"
+    }
+  ]
+}

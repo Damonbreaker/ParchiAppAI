@@ -1,0 +1,93 @@
+[
+  {
+    "source_id": "packsense_india",
+    "name": "PackSense India / Open Food Facts",
+    "url": "https://huggingface.co/datasets/PackSense/packsense-india/resolve/main/india_products.csv",
+    "landing_page": "https://huggingface.co/datasets/PackSense/packsense-india",
+    "license": "ODbL-1.0",
+    "redistributable": true,
+    "status": "available",
+    "local_path": "catalogue_pipeline/raw/packsense_india/india_products.csv",
+    "bytes": 5657152,
+    "sha256": "9007b7a48fe9bc129e6a90a6fc7dfb4dfdcb6a72f53b3a3aabc74eda0d5d1951",
+    "error": ""
+  },
+  {
+    "source_id": "bigbasket_28k",
+    "name": "BigBasket Entire Product List",
+    "url": "https://raw.githubusercontent.com/FuadAnalyst/EDA-Exploratory-Data-Analysis/main/BigBasket%20Products.csv",
+    "landing_page": "https://www.kaggle.com/datasets/surajjha101/bigbasket-entire-product-list-28k-datapoints",
+    "license": "unclear",
+    "redistributable": false,
+    "status": "available",
+    "local_path": "catalogue_pipeline/raw/bigbasket_28k/products.csv",
+    "bytes": 16739247,
+    "sha256": "3b41689c4755f195f60c7a3b00cd3abbc7b04e53834fe7adc0dab582a74189ad",
+    "error": ""
+  },
+  {
+    "source_id": "dmart_5k",
+    "name": "DMart Products",
+    "url": "https://www.kaggle.com/api/v1/datasets/download/chinmayshanbhag/dmart-products",
+    "landing_page": "https://www.kaggle.com/datasets/chinmayshanbhag/dmart-products",
+    "license": "unclear",
+    "redistributable": false,
+    "status": "available",
+    "local_path": "catalogue_pipeline/raw/dmart_5k/DMart.csv",
+    "bytes": 4086356,
+    "sha256": "2cff72decea6e8a91f8a493d529eb78c125418356c5834414339773352189acf",
+    "error": ""
+  },
+  {
+    "source_id": "zepto_inventory",
+    "name": "Zepto E-Commerce Inventory Snapshot",
+    "url": "https://raw.githubusercontent.com/amlanmohanty1/zepto-SQL-data-analysis-project/main/zepto_v2.csv",
+    "landing_page": "https://github.com/amlanmohanty1/zepto-SQL-data-analysis-project",
+    "license": "unclear",
+    "redistributable": false,
+    "status": "available",
+    "local_path": "catalogue_pipeline/raw/zepto_inventory/products.csv",
+    "bytes": 300234,
+    "sha256": "05f33e67581ebc768f380b82acbef664487341249a26bd149f2293528e35fc0f",
+    "error": ""
+  },
+  {
+    "source_id": "jiomart_products",
+    "name": "JioMart Products Dataset",
+    "url": "https://www.kaggle.com/api/v1/datasets/download/mahanidhi/jiomart-products-dataset",
+    "landing_page": "https://www.kaggle.com/datasets/mahanidhi/jiomart-products-dataset",
+    "license": "unclear",
+    "redistributable": false,
+    "status": "available",
+    "local_path": "catalogue_pipeline/raw/jiomart_products/jiomart_products.csv",
+    "bytes": 119761,
+    "sha256": "ecd24d18d85e3fa9dc0470fea967862eb09a0ddd3b583c6ba708e7571c3f9b30",
+    "error": ""
+  },
+  {
+    "source_id": "open_prices_india",
+    "name": "Open Prices India",
+    "url": "https://huggingface.co/datasets/openfoodfacts/open-prices/resolve/main/prices.parquet",
+    "landing_page": "https://openfoodfacts.github.io/open-prices/",
+    "license": "ODbL-1.0",
+    "redistributable": true,
+    "status": "available",
+    "local_path": "catalogue_pipeline/raw/open_prices_india/prices.parquet",
+    "bytes": 81600688,
+    "sha256": "019eee3e89a3bd7ead30b88209cfbd87b091e4f08d2027518cb794f31931fd2c",
+    "error": ""
+  },
+  {
+    "source_id": "agmarknet_daily",
+    "name": "AGMARKNET Daily Mandi Prices",
+    "url": "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070",
+    "landing_page": "https://www.data.gov.in/catalog/current-daily-price-various-commodities-various-markets-mandi",
+    "license": "Government Open Data License - India",
+    "redistributable": true,
+    "status": "skipped",
+    "local_path": "",
+    "bytes": 0,
+    "sha256": "",
+    "error": "RuntimeError: DATA_GOV_IN_API_KEY is not set"
+  }
+]
