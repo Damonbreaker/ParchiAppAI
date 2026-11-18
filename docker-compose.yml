@@ -1,0 +1,79 @@
+name: parchi
+
+# Full stack for a single VM (e.g. Oracle Cloud Always-Free).
+# Setup: cp .env.example .env && edit it, then: docker compose up -d --build
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kirana_ai
+      POSTGRES_USER: kirana
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kirana -d kirana_ai"]
+      interval: 5s
+      retries: 20
+
+  ocr:
+    build: ./ocr-service
+    restart: unless-stopped
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?set GEMINI_API_KEY in .env}
+      PARCHI_AI_OCR_MODEL: ${PARCHI_AI_OCR_MODEL:-gemini-2.0-flash-lite}
+    expose:
+      - "7870"
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ocr:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/kirana_ai
+      DB_USERNAME: kirana
+      DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      PARCHI_READER: local-ocr
+      OCR_BASE_URL: http://ocr:7870
+      JAVA_OPTS: ${JAVA_OPTS:--Xmx700m}
+    expose:
+      - "8081"
+
+  web:
+    build:
+      context: .
+      dockerfile: deploy/web.Dockerfile
+      args:
+        VITE_DEMO: ${VITE_DEMO:-1}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    expose:
+      - "8080"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - web
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?set SITE_DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

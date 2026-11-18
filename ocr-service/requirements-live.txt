@@ -1,0 +1,7 @@
+# Runtime deps for the live OCR path (Gemini over HTTP + catalogue lookup).
+# No torch/paddle needed: scan_server -> main_flow_ai -> ai_handwriting (urllib).
+fastapi
+uvicorn
+python-multipart
+pillow
+rapidfuzz

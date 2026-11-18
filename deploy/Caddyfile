@@ -1,0 +1,6 @@
+# HTTPS (automatic Let's Encrypt) in front of the web container.
+# SITE_DOMAIN is set in .env, e.g. parchi.example.com
+{$SITE_DOMAIN} {
+	encode gzip
+	reverse_proxy web:8080
+}

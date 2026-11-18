@@ -1,0 +1,4 @@
+target/
+.mvn/settings-proxy.xml
+ocr-service/
+*.log

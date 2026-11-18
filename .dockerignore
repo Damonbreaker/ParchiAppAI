@@ -1,0 +1,11 @@
+.git
+.run-logs/
+**/node_modules/
+frontend/dist/
+backend/target/
+**/__pycache__/
+ocr-service/runs/
+.env
+.env.*
+!.env.example
+.gradio/
